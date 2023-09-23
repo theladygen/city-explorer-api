@@ -20,19 +20,13 @@ class Forecast {
 }
 
 app.get('/weather', (request, response) => {
-  if (!request.query.searchQuery) {
-    response.status(400).send('Bad Request');
-    return;
-  }
-
   const cityJson = weatherJson.find(
     (cityJson) =>
-      request.query.searchQuery.toUpperCase() ===
-      cityJson.city_name.toUpperCase()
+      request.query.lat === cityJson.lat && request.query.lon === cityJson.lon
   );
 
   if (!cityJson) {
-    response.status(404).send('City Not Found');
+    response.status(404).send({ error: 'City Not Found' });
     return;
   }
 
@@ -46,6 +40,16 @@ app.get('/weather', (request, response) => {
   response.status(200).send(forecasts);
 });
 
+const errorHandler = (error, request, response, next) => {
+  if (response.headersSent) {
+    return next(error);
+  }
+
+  response.status(500);
+  response.render({ error });
+};
+
+app.use(errorHandler);
 app.listen(PORT, () => {
   console.log('App is listening!');
 });
